@@ -11,6 +11,7 @@ A lightweight bookmarklet for **Slither.io** with mouse-wheel zoom and middle-cl
 
 - Mouse-wheel zoom
 - Middle-click toggle between default zoom and the last custom zoom
+- Resets visible zoom to default when leaving a round
 - No extension required
 - No extra UI
 - Prevents duplicate installation in the same tab
@@ -29,11 +30,12 @@ This bookmarklet keeps things simple:
 
 The script stores a desired zoom level and keeps it active while the page is running.
 
-It also uses an internal flag:
+It also uses two internal flags:
 
 - `__slitherZoomInstalled`
+- `__slitherWasPlaying`
 
-This prevents multiple event listeners or animation loops from being added if the bookmarklet is clicked more than once in the same tab.
+These prevent duplicate installation in the same tab and allow the script to detect when gameplay ends so the visible zoom can be reset to default in the menu.
 
 ## Controls
 
@@ -60,7 +62,7 @@ That means:
 ## Bookmarklet
 
 ```javascript
-javascript:(()=>{window.default_gsc=0.9;window.desired_gsc=window.gsc||window.default_gsc;window.last_user_gsc=window.desired_gsc;if(!window.__slitherZoomInstalled){window.__slitherZoomInstalled=true;document.body.addEventListener('wheel',function(e){if(!window.gsc)return;e.preventDefault();window.desired_gsc*=Math.pow(0.9,e.deltaY/120);if(window.desired_gsc<0.1)window.desired_gsc=0.1;if(window.desired_gsc>4)window.desired_gsc=4;window.last_user_gsc=window.desired_gsc;window.gsc=window.desired_gsc;},{passive:false});document.addEventListener('mousedown',function(e){if(e.button===1)e.preventDefault();},{passive:false});document.addEventListener('auxclick',function(e){if(e.button!==1)return;e.preventDefault();const isDefault=Math.abs(window.desired_gsc-window.default_gsc)<0.01;if(isDefault){window.desired_gsc=window.last_user_gsc||0.5;}else{window.last_user_gsc=window.desired_gsc;window.desired_gsc=window.default_gsc;}window.gsc=window.desired_gsc;});(function keepZoom(){if(window.desired_gsc!==undefined)window.gsc=window.desired_gsc;requestAnimationFrame(keepZoom);})();}})();
+javascript:(()=>{window.default_gsc=1.0;window.desired_gsc=window.gsc||window.default_gsc;window.last_user_gsc=window.desired_gsc;window.__slitherWasPlaying=!!window.playing;if(!window.__slitherZoomInstalled){window.__slitherZoomInstalled=true;document.body.addEventListener('wheel',function(e){if(!window.gsc)return;e.preventDefault();window.desired_gsc*=Math.pow(0.9,e.deltaY/120);if(window.desired_gsc<0.1)window.desired_gsc=0.1;if(window.desired_gsc>4)window.desired_gsc=4;window.last_user_gsc=window.desired_gsc;window.gsc=window.desired_gsc;},{passive:false});document.addEventListener('mousedown',function(e){if(e.button===1)e.preventDefault();},{passive:false});document.addEventListener('auxclick',function(e){if(e.button!==1)return;e.preventDefault();const isDefault=Math.abs(window.desired_gsc-window.default_gsc)<0.01;if(isDefault){window.desired_gsc=window.last_user_gsc||0.5;}else{window.last_user_gsc=window.desired_gsc;window.desired_gsc=window.default_gsc;}window.gsc=window.desired_gsc;});(function keepZoom(){const isPlaying=!!window.playing;if(window.__slitherWasPlaying&&!isPlaying){window.desired_gsc=window.default_gsc;window.gsc=window.default_gsc;}window.__slitherWasPlaying=isPlaying;if(window.desired_gsc!==undefined){window.gsc=window.desired_gsc;}requestAnimationFrame(keepZoom);})();}})();
 ```
 
 ## Notes
