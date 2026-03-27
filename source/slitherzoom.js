@@ -1,6 +1,7 @@
-window.default_gsc = 0.9;
+window.default_gsc = 1.0;
 window.desired_gsc = window.gsc || window.default_gsc;
 window.last_user_gsc = window.desired_gsc;
+window.__slitherWasPlaying = !!window.playing;
 
 if (!window.__slitherZoomInstalled) {
     window.__slitherZoomInstalled = true;
@@ -43,9 +44,20 @@ if (!window.__slitherZoomInstalled) {
     });
 
     (function keepZoom() {
+        const isPlaying = !!window.playing;
+
+        // Reset visible zoom when leaving a round / dying / returning to menu
+        if (window.__slitherWasPlaying && !isPlaying) {
+            window.desired_gsc = window.default_gsc;
+            window.gsc = window.default_gsc;
+        }
+
+        window.__slitherWasPlaying = isPlaying;
+
         if (window.desired_gsc !== undefined) {
             window.gsc = window.desired_gsc;
         }
+
         requestAnimationFrame(keepZoom);
     })();
 }
